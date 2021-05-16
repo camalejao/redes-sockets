@@ -21,7 +21,8 @@ print(f"[+] {address} is connected.")
 received = client_socket.recv(BUFFER_SIZE).decode()
 filename, filesize, NEW_PATH = received.split(SEPARATOR)
 
-NEW_PATH = NEW_PATH+"\\"+filename
+# NEW_PATH = NEW_PATH+"\\"+filename
+NEW_PATH = filename
 
 filesize = int(filesize)
 
