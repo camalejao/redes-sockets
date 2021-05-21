@@ -37,10 +37,16 @@ def list_files(s):
 
 
 def send_file(s):
-    filepath = input("Olá! Informe o caminho absoluto do arquivo que será enviado (ou apenas seu nome, caso esteja no mesmo diretório):\n")
+    filepath = input("Olá! Informe o caminho absoluto do arquivo que será enviado (ou apenas seu nome, caso esteja no mesmo diretório. Obs: não esqueça a extensão do arquivo):\n")
     filename = input("Informe com qual nome esse arquivo será salvo no servidor: ")
 
-    filesize = os.path.getsize(filepath)
+    filesize = 0
+
+    try:
+        filesize = os.path.getsize(filepath)
+    except FileNotFoundError as e:
+        print("Não conseguimos encontrar o arquivo informado")
+        return
 
     s.send(f"new{SEPARATOR}{filename}{SEPARATOR}{filesize}".encode())
 
