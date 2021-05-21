@@ -49,8 +49,7 @@ def receive_file(received, client_socket):
 
                 remaining -= len(bytes_read)
                 print(100*(filesize - remaining)/filesize, "%")
-        client_socket.sendall(str.encode("Sucesso: arquivo recebido"))
-
+        client_socket.sendall(str.encode("Sucesso: arquivo enviado"))
 
 
 def list_files(client_socket):
@@ -62,20 +61,58 @@ def list_files(client_socket):
     client_socket.sendall(str.encode(response))
 
 
+def send_files(received, client_socket):
+    msg = received.split(SEPARATOR)
+    
+    filename = msg[1]
+    filepath = '.\{}'.format(filename)
+
+    filesize = 0
+
+    try:
+        filesize = os.path.getsize(filepath)
+    except FileNotFoundError as e:
+        client_socket.send(str.encode("Erro: arquivo não encontrado"))
+        return
+
+    client_socket.send(f"{filename}{SEPARATOR}{filesize}".encode())
+
+    sent = 0
+    print("Enviando...")
+    with open(filepath, "rb") as f:
+        while True:
+            bytes_read = f.read(BUFFER_SIZE)
+            if len(bytes_read) <= 0:
+                break
+            
+            client_socket.sendall(bytes_read)
+
+            sent += len(bytes_read)
+            print(100*sent/filesize, "%")
+    
+    res = client_socket.recv(BUFFER_SIZE)
+    print(res.decode('utf-8'))
+
 
 def handle_client(client_socket, address):
     while True:
-        # Recebendo os dados do cliente
-        received = client_socket.recv(BUFFER_SIZE).decode()
+
+        try:
+            # Recebendo os dados do cliente
+            received = client_socket.recv(BUFFER_SIZE).decode()
+        except ConnectionAbortedError as err:
+            return
         
         # Separando os dados recebidos para interpretar mensagem
         msg = received.split(SEPARATOR)
-        
+
         cmd = msg[0]
         if cmd == "new":
             receive_file(received, client_socket)
         elif cmd == "ls":
             list_files(client_socket)
+        elif cmd == "get":
+            send_files(received, client_socket)
         elif cmd == "stop":
             client_socket.close()
             break

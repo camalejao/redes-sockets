@@ -34,8 +34,7 @@ def list_files(s):
     s.send(f"ls{SEPARATOR}".encode())
     res = s.recv(BUFFER_SIZE)
     print(res.decode('utf-8'))
-
-
+    
 def send_file(s):
     filepath = input("Olá! Informe o caminho absoluto do arquivo que será enviado (ou apenas seu nome, caso esteja no mesmo diretório. Obs: não esqueça a extensão do arquivo):\n")
     filename = input("Informe com qual nome esse arquivo será salvo no servidor: ")
@@ -66,7 +65,37 @@ def send_file(s):
     res = s.recv(BUFFER_SIZE)
     print(res.decode('utf-8'))
 
+def download_files(s):
+    list_files(s)
 
+    filename = input("Informe o nome do arquivo: ")
+
+    s.send(f"get{SEPARATOR}{filename}".encode())
+
+    received = s.recv(BUFFER_SIZE).decode()
+
+    filename, filesize = received.split(SEPARATOR)
+
+    filesize = int(filesize)
+    remaining = filesize
+
+    if os.path.isfile(filename):
+        print("Erro: arquivo já existente.")
+    else:
+        with open(filename, "wb") as f:
+            while True:
+                if remaining <= 0:
+                    break
+                bytes_read = s.recv(BUFFER_SIZE)
+
+                f.write(bytes_read)
+
+                remaining -= len(bytes_read)
+                print(100*(filesize - remaining)/filesize, "%")
+        print("Sucesso: arquivo recebido")
+
+        
+    
 def main():
     s = socket.socket()
     s.connect((HOST, PORT))
@@ -77,12 +106,15 @@ def main():
         print("[0] Sair")
         print("[1] Listar arquivos no servidor")
         print("[2] Enviar arquivo")
+        print("[3] Baixar arquivo")
     
         opt = int(input())
         if opt == 1:
             list_files(s)
         elif opt == 2:
             send_file(s)
+        elif opt == 3:
+            download_files(s)
         elif opt == 0:
             s.sendall(f"stop{SEPARATOR}".encode())
     s.close()
