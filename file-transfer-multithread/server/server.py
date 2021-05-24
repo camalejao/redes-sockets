@@ -31,7 +31,6 @@ def parse_args():
 
 
 def receive_file(received, client_socket):
-    print(received)
     cmd, filename, filesize = received.split(SEPARATOR)
         
     filesize = int(filesize)
@@ -45,6 +44,8 @@ def receive_file(received, client_socket):
         aux = os.path.join(os.getcwd(), "files", str(i) + "-" + filename)
         i += 1
     filepath = aux
+
+    client_socket.send("clear".encode())
     
     with open(filepath, "wb") as f:
         while True:
@@ -84,8 +85,11 @@ def send_files(received, client_socket):
 
     client_socket.send(f"{filename}{SEPARATOR}{filesize}".encode())
 
+    res = client_socket.recv(BUFFER_SIZE)
+    if res.decode('utf8') == 'clear':
+        print("Enviando...")
+        
     sent = 0
-    print("Enviando...")
     with open(filepath, "rb") as f:
         while True:
             bytes_read = f.read(BUFFER_SIZE)

@@ -49,8 +49,11 @@ def send_file(s):
 
     s.send(f"new{SEPARATOR}{filename}{SEPARATOR}{filesize}".encode())
 
+    res = s.recv(BUFFER_SIZE)
+    if res.decode('utf8') == 'clear':
+        print("Enviando...")
+
     sent = 0
-    print("Enviando...")
     with open(filepath, "rb") as f:
         while True:
             bytes_read = f.read(BUFFER_SIZE)
@@ -85,6 +88,8 @@ def download_files(s):
         aux = str(i) + "-" + filename
         i += 1
     filename = aux
+
+    s.send("clear".encode())
 
     with open(filename, "wb") as f:
         while True:
