@@ -79,20 +79,26 @@ def download_files(s):
     filesize = int(filesize)
     remaining = filesize
 
-    if os.path.isfile(filename):
-        print("Erro: arquivo já existente.")
-    else:
-        with open(filename, "wb") as f:
-            while True:
-                if remaining <= 0:
-                    break
-                bytes_read = s.recv(BUFFER_SIZE)
+    aux = filename
+    i = 1
+    while os.path.isfile(aux):
+        aux = str(i) + "-" + filename
+        i += 1
+    filename = aux
 
-                f.write(bytes_read)
+    with open(filename, "wb") as f:
+        while True:
+            if remaining <= 0:
+                break
+            bytes_read = s.recv(BUFFER_SIZE)
 
-                remaining -= len(bytes_read)
-                print(100*(filesize - remaining)/filesize, "%")
-        print("Sucesso: arquivo recebido")
+            f.write(bytes_read)
+
+            remaining -= len(bytes_read)
+            print(100*(filesize - remaining)/filesize, "%")
+    msg = "Sucesso: arquivo recebido"
+    s.send(str.encode(msg))
+    print(msg)
 
         
     

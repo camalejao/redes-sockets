@@ -31,30 +31,37 @@ def parse_args():
 
 
 def receive_file(received, client_socket):
+    print(received)
     cmd, filename, filesize = received.split(SEPARATOR)
         
     filesize = int(filesize)
     remaining = filesize
     
-    if os.path.isfile(filename):
-        client_socket.send(str.encode("Erro: arquivo já existente."))
-    else:
-        with open(filename, "wb") as f:
-            while True:
-                if remaining <= 0:
-                    break
-                bytes_read = client_socket.recv(BUFFER_SIZE)
+    filepath = os.path.join(os.getcwd(), "files", filename)
+    
+    aux = filepath
+    i = 1
+    while os.path.isfile(aux):
+        aux = os.path.join(os.getcwd(), "files", str(i) + "-" + filename)
+        i += 1
+    filepath = aux
+    
+    with open(filepath, "wb") as f:
+        while True:
+            if remaining <= 0:
+                break
+            bytes_read = client_socket.recv(BUFFER_SIZE)
 
-                f.write(bytes_read)
+            f.write(bytes_read)
 
-                remaining -= len(bytes_read)
-                print(100*(filesize - remaining)/filesize, "%")
-        client_socket.sendall(str.encode("Sucesso: arquivo enviado"))
+            remaining -= len(bytes_read)
+            print(100*(filesize - remaining)/filesize, "%")
+    client_socket.sendall(str.encode("Sucesso: arquivo enviado"))
 
 
 def list_files(client_socket):
     print("list files")
-    files = os.listdir()
+    files = os.listdir(os.path.join(os.getcwd(), "files"))
     response = "Arquivos disponíveis:\n"
     for f in files:
         response += f + "\n"
@@ -65,7 +72,7 @@ def send_files(received, client_socket):
     msg = received.split(SEPARATOR)
     
     filename = msg[1]
-    filepath = '.\{}'.format(filename)
+    filepath = os.path.join(os.getcwd(), "files", filename)
 
     filesize = 0
 
